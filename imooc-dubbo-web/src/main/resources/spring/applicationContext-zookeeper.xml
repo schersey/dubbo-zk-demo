@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:util="http://www.springframework.org/schema/util"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.2.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.2.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.2.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.2.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util-4.2.xsd">
+
+    <description>zk与Spring容器结合，启动项目加载时建立与zk的连接</description>
+    <!-- zookeeper重试策略 -->
+    <bean id="retryPolicy" class="org.apache.curator.retry.RetryNTimes">
+        <!-- 重试次数 -->
+        <constructor-arg index="0" value="10"></constructor-arg>
+        <!-- 重试间隔 -->
+        <constructor-arg index="1" value="5000"></constructor-arg>
+    </bean>
+
+    <!-- zookeeper客户端 -->
+    <bean id="client" class="org.apache.curator.framework.CuratorFrameworkFactory"
+        factory-method="newClient" init-method="start">
+        <!-- zookeeper服务器地址，多个用逗号分割 -->
+        <constructor-arg index="0" value="127.0.0.1:2181"></constructor-arg>
+        <!-- zookeeper session time会话超时时间 -->
+        <constructor-arg index="1" value="10000"></constructor-arg>
+        <!-- connectionTimeoutMs 创建连接超时时间 -->
+        <constructor-arg index="2" value="5000"></constructor-arg>
+        <!-- 重试策略 -->
+        <constructor-arg index="3" ref="retryPolicy"></constructor-arg>
+    </bean>
+
+    <!-- 注入zookeeper客户端 -->
+    <bean id="zkCurator" class="com.imooc.curator.utils.ZKCurator" init-method="init">
+        <constructor-arg index="0" ref="client"></constructor-arg>
+    </bean>
+
+    <bean id="distributedLock" class="com.imooc.curator.utils.DistributedLock" init-method="init">
+        <constructor-arg index="0" ref="client"></constructor-arg>
+    </bean>
+
+</beans>
